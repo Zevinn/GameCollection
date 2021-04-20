@@ -7,8 +7,8 @@ namespace GameCollection
         static void Main(string[] args)
         {
             // public void Launch() {
-            BaseBall baseball = new BaseBall();
-            baseball.Run();
+            //BaseBall baseball = new BaseBall();
+            //baseball.Run();
             //}
             WordGuess wordguess = new WordGuess();
             wordguess.Run();
