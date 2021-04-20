@@ -2,7 +2,7 @@
 
 namespace GameCollection
 {
-    class Program
+    class GameLauncher
     {
         static void Main(string[] args)
         {

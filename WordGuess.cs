@@ -8,7 +8,11 @@ namespace GameCollection
     {
         public void Run()
         {
-
+            while(true)
+            {
+                Initialize();
+                Play();
+            }
         }
 
         private void Initialize()
