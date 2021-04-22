@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace GameCollection
 {
@@ -14,7 +15,7 @@ namespace GameCollection
 
         public LEVEL level { get; private set; }
         private string[] Words;
-        private List<char> Attempts;
+        private List<string> Attempts;
         private int chances { get; set; }
 
         public void Run()
@@ -94,57 +95,112 @@ namespace GameCollection
 
         private void AttemptsHistory()
         {
-            Console.WriteLine("### Attempts ###");
+            Console.WriteLine("\t\t### Attempts ###");
             if (Attempts.Count == 0)
             {
-                Console.WriteLine("###   Your   ###");
-                Console.WriteLine("### attempts ###");
-                Console.WriteLine("###  appear  ###");
-                Console.WriteLine("###   here   ###");
+                Console.WriteLine("\t\t###   Your   ###");
+                Console.WriteLine("\t\t### attempts ###");
+                Console.WriteLine("\t\t###  appear  ###");
+                Console.WriteLine("\t\t###   here   ###");
             }
             else
             {
-                foreach (char c in Attempts)
-                    Console.WriteLine($"###     {c}    ###");
+                foreach (string s in Attempts)
+                    Console.WriteLine($"\t\t\t{s}");
             }
 
-            Console.WriteLine("################");
+            Console.WriteLine("\t\t################");
+            Console.WriteLine();
         }
 
-        private string Guess()
+        private bool Guess(int index)
         {
-            string input = null;
+            // Problems :
+            // 1) when correcting as matching each letter -> end the game as player wins
+            // but, can't as it's hard to track whether the char array is all revealed or not.
+            // if it was string, I could have.
+            char[] word = new char[Words[index].Length];
+            for (int i = 0; i < Words[index].Length; i++)
+                word[i] = '\u25cf';
 
+            string input = null;
+            int round = 0;
             
-            while (input == null)
+            while (chances - round > 0)
             {
+                Console.WriteLine($"Spare Attempts: {chances - round}");
+                AttemptsHistory();
                 Console.WriteLine("######## GUESS THE WORD ########");
+                Console.Write("[ ");
+                foreach (char c in word)
+                    Console.Write(c);
+                Console.WriteLine(" ]");
+                Console.Write("-> ");
                 try
                 {
                     input = Console.ReadLine().Trim();
-                    // how to catch numbers and other char?
+                    Regex regex = new Regex(@"^[a-zA-Z]$"); // only single alphabetic character
+                    bool valid = regex.IsMatch(input);
+                    if (input.Length == word.Length)
+                    {
+                        if (Words[index].CompareTo(input) == 0) // input.Length == word.Length
+                        {
+                            Console.WriteLine($"Correct! the word is [ {input} ]");
+                            Console.ReadLine();
 
-                    if (input.Length != 1) // only a char allowed FOR NOW
+                            return true;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Beep! wrong, try again.");
+                            Console.ReadLine();
+                            Attempts.Add(input);
+                            round++;
+                        }
+                    }
+                    else if (regex.IsMatch(input))
+                    {
+                        if (Attempts.Contains(input))
+                        {
+                            Console.WriteLine("You've already tried the letter {0}!", input);
+                            Console.ReadLine();
+                            Console.Clear();
+                            continue;
+                        }
+
+                        if (Words[index].Contains(input))
+                        {
+                            int startIndex = 0;
+                            while (Words[index].IndexOf(input, startIndex) != -1)
+                            {
+                                int toReveal = Words[index].IndexOf(input, startIndex);
+                                word[toReveal] = input.ToUpper().ToCharArray()[0]; // this MUST be one-sized char array as checked above
+                                startIndex = toReveal + 1;
+                            }
+                        }
+                        Attempts.Add(input);
+                        round++;
+                    }
+                    else
                         throw new ArgumentException();
                 }
                 catch (ArgumentException ae)
                 {
-                    Console.WriteLine("# Only a single letter allowed #");
+                    Console.WriteLine("Only single alphabetic letter is allowed");
                     Console.ReadLine();
                     Console.Clear();
-                    input = null;
                     continue;
                 }
-                catch (Exception e)
+
+                if (chances - round == 0)
                 {
-                    // when not alphabet
+                    Console.WriteLine("Aww, you are out of your chances. ):");
+                    Console.WriteLine($"The word was {Words[index].ToUpper()}");
+                    Console.ReadLine();
                 }
-                
+                Console.Clear();
             }
-
-
-
-            return input;
+            return false;
         }
 
         private void Play()
@@ -156,44 +212,23 @@ namespace GameCollection
 
             while (completed.Count != Words.Length)
             {
-                int index = 0, round = 0;
-                string input = null;
-                Attempts = new List<char>();
+                int index = 0;
+                //string input = null;
+                Attempts = new List<string>();
                 Console.Clear();
                 index = ran.Next(0, Words.Length);
                 if (completed.Contains(index)) continue; // if completed word, choose another word
 
-                string word = null;
-                for (int i = 0; i < Words[index].Length; i++)
-                    word += "'\u25cf'";
-
-                while (chances - round > 0)
-                {
-                    
-
-
-
-
-                    input = Guess();
-                    AttemptsHistory();
-                    round++;
-                }
-
-                if(chances - round == 0)
-                {
-                    Console.WriteLine("Aww, you are out of your chances. ):");
-                    Console.WriteLine($"The word was {Words[index]}");
-                    Console.ReadLine();
-                }
-                else
+                if (Guess(index)) // player correct will return true, otherwise false
                 {
                     completed.Add(index);
                 }
 
                 if (completed.Count == Words.Length)
                 {
-                    Console.WriteLine("Congrats! You are done for the level!");
+                    Console.WriteLine("Congrats! You have completed the level! Challenge the next level!");
                     Console.ReadLine();
+                    Console.Clear();
                     return;
                 }
                 else
