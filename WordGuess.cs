@@ -115,10 +115,6 @@ namespace GameCollection
 
         private bool Guess(int index)
         {
-            // Problems :
-            // 1) when correcting as matching each letter -> end the game as player wins
-            // but, can't as it's hard to track whether the char array is all revealed or not.
-            // if it was string, I could have.
             char[] word = new char[Words[index].Length];
             for (int i = 0; i < Words[index].Length; i++)
                 word[i] = '\u25cf';
@@ -145,7 +141,7 @@ namespace GameCollection
                     {
                         if (Words[index].CompareTo(input) == 0) // input.Length == word.Length
                         {
-                            Console.WriteLine($"Correct! the word is [ {input} ]");
+                            Console.WriteLine($"Correct! the word is [ {input.ToUpper} ]");
                             Console.ReadLine();
 
                             return true;
@@ -180,6 +176,26 @@ namespace GameCollection
                         }
                         Attempts.Add(input);
                         round++;
+
+                        bool correct = true;
+                        foreach (char c in word)
+                        {
+                            if (c == '\u25cf')
+                            {
+                                correct = false;
+                                break;
+                            }
+                        }
+                        if (correct)
+                        {
+                            Console.Write("Correct! the word is [ ");
+                            foreach (char c in word)
+                                Console.Write(c);
+                            Console.WriteLine(" ]");
+                            Console.ReadLine();
+
+                            return true;
+                        }
                     }
                     else
                         throw new ArgumentException();
@@ -194,7 +210,7 @@ namespace GameCollection
 
                 if (chances - round == 0)
                 {
-                    Console.WriteLine("Aww, you are out of your chances. ):");
+                    Console.WriteLine("You are out of your chances. ):");
                     Console.WriteLine($"The word was {Words[index].ToUpper()}");
                     Console.ReadLine();
                 }
@@ -236,7 +252,7 @@ namespace GameCollection
                     string answer = null;
                     while (answer != "Q" && answer != "N")
                     {
-                        Console.WriteLine("Continue?(Q: Quit to Lobby / N: Next word");
+                        Console.WriteLine("Continue?(Q: Quit to Lobby / N: Next word)");
                         Console.Write(" -> ");
                         answer = Console.ReadLine();
                         answer = answer.ToUpper();
